@@ -2,45 +2,86 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>نماز به افق مشهد</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root{
       --bg:#0f172a; --panel:#1e293b; --muted:#94a3b8; --text:#e2e8f0;
       --brand:#93c5fd; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --chip:#334155;
+      --ring:#60a5fa;
     }
     *{ box-sizing:border-box; }
     body{ margin:0; font-family:system-ui, Tahoma; background:var(--bg); color:var(--text); }
     a{ color:var(--brand); text-decoration:none; }
     .container{ max-width:980px; margin:0 auto; padding:24px; }
-    header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
-    nav{ display:flex; gap:12px; }
-    nav a{ padding:8px 10px; border-radius:8px; background:var(--chip); color:var(--text); }
+    header{ display:flex; flex-direction:column; gap:12px; margin-bottom:16px; }
+    nav{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+    nav a{ padding:8px 10px; border-radius:10px; background:var(--chip); color:var(--text); transition:transform .12s ease, background .2s ease; }
+    nav a:hover{ transform:translateY(-1px); background:#3a4a63; }
     h1{ margin:0; font-size:22px; }
     h2{ margin:12px 0 16px; font-size:20px; }
-    .toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:8px; }
-    .btn{ background:#334155; color:var(--text); border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    .toolbar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; margin-bottom:16px; gap:6px; }
+    .btn{ background:#334155; color:var(--text); border:none; padding:6px 10px; border-radius:10px; cursor:pointer; font-size:14px; transition:transform .12s ease, background .2s ease, opacity .2s; }
+    .btn:hover{ transform:translateY(-1px); background:#3a4a63; }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
     .btn.primary{ background:var(--ok); color:#0b141e; }
     .grid{ display:grid; gap:12px; }
+    /* پیش‌فرض دسکتاپ: کارت‌های روز مثل قبل */
     .days{ grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); }
-    .card{ background:var(--panel); border-radius:10px; padding:14px; }
-    .day-card{ display:block; color:var(--text); }
-    .day-title{ font-weight:700; margin-bottom:6px; }
+    .card{ background:var(--panel); border-radius:14px; padding:14px; box-shadow:0 6px 18px rgba(0,0,0,.25); border:1px solid rgba(148,163,184,.08); }
+    .day-card{ display:block; color:var(--text); position:relative; }
+    .day-card:hover{ transform:translateY(-1px); }
+    .day-card.today{ outline:2px solid var(--ring); box-shadow:0 0 0 4px rgba(96,165,250,.15), 0 6px 18px rgba(0,0,0,.28); }
+    .day-title{ font-weight:800; margin-bottom:6px; }
     .muted{ color:var(--muted); font-size:13px; }
     .rows{ display:grid; gap:10px; }
-    .row{ display:grid; grid-template-columns: 1fr auto auto auto; gap:12px; align-items:center; padding:10px 12px; background:var(--panel); border-radius:8px; }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr auto auto 1.4fr; /* نام | زمان اذان | دکمه | وضعیت */
+      gap:10px; align-items:center; padding:10px 12px;
+      background:rgba(255,255,255,.02); border:1px solid rgba(148,163,184,.08); border-radius:12px;
+    }
+    .num{ font-variant-numeric: tabular-nums; letter-spacing:.2px; }
     .chip{ background:var(--chip); border-radius:999px; padding:4px 10px; font-size:12px; }
-    .stat-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:16px; }
+    .stat-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:8px; margin-bottom:16px; }
     .stat .label{ color:var(--muted); font-size:13px; margin-bottom:6px; }
     .stat .value{ font-size:22px; font-weight:800; }
     .inline{ display:inline-flex; gap:8px; align-items:center; }
     .flex{ display:flex; }
     .gap8{ gap:8px; } .gap12{ gap:12px; }
-    .hidden{ display:none; } .hr{ height:1px; background:#233044; margin:14px 0; }
+    .hidden{ display:none; } .hr{ height:1px; background:#233044; margin:12px 0; }
     .danger{ color:var(--bad); } .success{ color:#22c55e; } .warn{ color:var(--warn); }
     .center{ text-align:center; } .wrap{ white-space: pre-wrap; }
     canvas{ background:transparent; }
+
+    /* کارت‌های گزارش هر نماز + نمودار دایره‌ای */
+    .prayer-report{
+      display:grid; grid-template-columns: auto 160px; align-items:center; gap:12px;
+    }
+    .prayer-report .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+
+    /* موبایل: روزها در دو ردیف با اسکرول افقی */
+    @media (max-width: 480px) {
+      .container { padding: 12px; }
+      h1 { font-size: 18px; }
+      h2 { font-size: 16px; margin: 8px 0 12px; }
+      .card { padding: 10px; border-radius:12px; }
+      .stat .value { font-size: 18px; }
+      .inline { flex-wrap: wrap; }
+      .btn { font-size: 13px; padding: 5px 8px; }
+      .days{
+        display:grid;
+        grid-auto-flow: column;
+        grid-template-rows: repeat(2, minmax(84px, auto));
+        grid-auto-columns: minmax(220px, 1fr);
+        gap:10px;
+        overflow-x:auto; padding-bottom:6px;
+        scroll-snap-type: x proximity;
+      }
+      .day-card{ scroll-snap-align:start; }
+      .prayer-report{ grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -94,8 +135,7 @@
         </div>
       </div>
 
-      <canvas id="report-chart" style="max-height:300px; margin-bottom:14px;"></canvas>
-
+      <!-- نمودار میله‌ای حذف شد؛ نمودارهای دایره‌ای برای هر نماز در by-prayer تولید می‌شوند. -->
       <div class="grid" id="by-prayer"></div>
       <div class="muted" style="margin-top:10px;">تعاریف: اول‌وقت ≤ ۱۵ دقیقه، مطلوب ≤ ۶۰ دقیقه، دیر &lt; ۴ ساعت، خیلی دیر ≥ ۴ ساعت</div>
 
@@ -270,11 +310,15 @@
 
     function renderMonth(){
       const m = buildJalaliMonth(currentJ.jy, currentJ.jm);
+      const todayJ = persianParts(new Date());
       currentMonthLabel.textContent = m.label;
       daysGrid.innerHTML = "";
       m.days.forEach(d=>{
         const a = document.createElement("a");
         a.href="#"; a.className="card day-card";
+        if (d.jy===todayJ.jy && d.jm===todayJ.jm && d.jd===todayJ.jd){
+          a.classList.add("today");
+        }
         a.innerHTML = `<div class="day-title">${fmtPersianDayLabel(d.date)}</div><div class="muted">مشاهده اوقات و ثبت نماز</div>`;
         a.addEventListener("click", e=>{ e.preventDefault(); openDay(d); });
         daysGrid.appendChild(a);
@@ -317,8 +361,12 @@
       const log = getLog(jy,jm,jd,label);
 
       const status = document.createElement("div");
-      status.style.textAlign = "end"; status.style.minWidth="160px";
+      status.style.textAlign = "start";
       status.innerHTML = log ? fmtStatus(log.delayMin) : `<span class="muted">—</span>`;
+
+      const timeEl = document.createElement("div");
+      timeEl.className = "num";
+      timeEl.textContent = adhanLocal;
 
       const btn = document.createElement("button");
       btn.className="btn primary"; btn.textContent="الان خوندم";
@@ -337,7 +385,6 @@
       if (!btn.disabled && prayerDate.getTime()===today.getTime() && nowUTC < adhanUTC){
         btn.disabled = true; btn.textContent = "هنوز نرسیده";
         const ms = adhanUTC.getTime() - nowUTC.getTime();
-        // فعال شدن خودکار دقیقاً سر اذان
         setTimeout(()=>{
           const l = getLog(jy,jm,jd,label);
           if (!l){ btn.disabled=false; btn.textContent="الان خوندم"; }
@@ -347,7 +394,6 @@
       btn.addEventListener("click", ()=>{
         if (btn.disabled) return;
         const now = new Date();
-        // اختلاف دقیقه نسبت به اذان
         const diffMin = Math.round((now.getTime() - adhanUTC.getTime())/60000);
         const rec = {
           id, jy, jm, jd, prayer: label,
@@ -361,38 +407,43 @@
         refreshReport();
       });
 
-      div.innerHTML = `<div style="font-weight:700">${label}</div><div>${adhanLocal}</div>`;
-      div.appendChild(btn); div.appendChild(status);
+      const nameEl = document.createElement("div");
+      nameEl.style.fontWeight = "800";
+      nameEl.textContent = label;
+
+      div.appendChild(nameEl);
+      div.appendChild(timeEl);
+      div.appendChild(btn);
+      div.appendChild(status);
       return div;
     }
 
     // وضعیت رنگی تاخیر
     function fmtStatus(delayMin){
       const abs = Math.abs(delayMin);
-      // پیشگیری؛ نباید پیش از اذان ثبت شود ولی اگر شد:
-      if (delayMin < 0) return `<span class="danger">${abs} دقیقه قبل از اذان</span>`;
-
+      if (delayMin < 0) return `<span class="danger num">${abs} دقیقه قبل از اذان</span>`;
       if (delayMin <= ONTIME_THRESHOLD_MIN){
-        return `<span class="success">${delayMin} دقیقه - اول وقت</span>`;
+        return `<span class="success num">${delayMin} دقیقه - اول وقت</span>`;
       }
       if (delayMin <= GOOD_THRESHOLD){
-        return `<span class="warn">${delayMin} دقیقه - مطلوب</span>`;
+        return `<span class="warn num">${delayMin} دقیقه - مطلوب</span>`;
       }
       if (delayMin < LATE_RED_THRESHOLD){
-        return `<span style="color:orange">${delayMin} دقیقه - دیر</span>`;
+        return `<span style="color:orange" class="num">${delayMin} دقیقه - دیر</span>`;
       }
-      return `<span class="danger">${delayMin} دقیقه - خیلی دیر</span>`;
+      return `<span class="danger num">${delayMin} دقیقه - خیلی دیر</span>`;
     }
 
     // =============================
-    // گزارش ۷ روزه + نمودار
+    // گزارش ۷ روزه + نمودارهای دایره‌ای
     // =============================
     const statTotal = document.getElementById("stat-total");
     const statOntime= document.getElementById("stat-ontime");
     const statAvg   = document.getElementById("stat-avg");
     const byPrayer  = document.getElementById("by-prayer");
     const btnClear  = document.getElementById("btn-clear-logs");
-    let reportChart = null;
+
+    let pieCharts = [];
 
     btnClear.addEventListener("click", ()=>{
       if (confirm("همه ثبت‌ها پاک شوند؟")){
@@ -401,7 +452,19 @@
       }
     });
 
+    function bucketsFor(arr){
+      const onTime = arr.filter(x=>x.delayMin>=0 && x.delayMin<=ONTIME_THRESHOLD_MIN).length;
+      const good   = arr.filter(x=>x.delayMin>ONTIME_THRESHOLD_MIN && x.delayMin<=GOOD_THRESHOLD).length;
+      const late   = arr.filter(x=>x.delayMin>GOOD_THRESHOLD && x.delayMin<LATE_RED_THRESHOLD).length;
+      const vlate  = arr.filter(x=>x.delayMin>=LATE_RED_THRESHOLD).length;
+      return { onTime, good, late, vlate };
+    }
+
     function refreshReport(){
+      // تخریب چارت‌های قبلی
+      pieCharts.forEach(ch => ch.destroy());
+      pieCharts = [];
+
       const logs = loadLogs();
       const now = Date.now();
       const sevenDaysMs = 6*86400000; // امروز و 6 روز قبل
@@ -417,54 +480,64 @@
       const avgDelay = positiveDelays.length ? Math.round(positiveDelays.reduce((s,v)=>s+v,0)/positiveDelays.length) : 0;
 
       statTotal.textContent = total;
-      statOntime.textContent = ontime;      // سبز (CSS)
-      statAvg.textContent    = avgDelay;    // قرمز (CSS)
+      statOntime.textContent = ontime;
+      statAvg.textContent    = avgDelay;
 
-      // داده‌های نمودار: تعداد کل ثبت و اول‌وقت برای هر نماز
+      // کارت‌ها + نمودارهای دایره‌ای برای هر نماز
       const labels = ["صبح","ظهر","مغرب"];
-      const counts = labels.map(n => recent.filter(x=>x.prayer===n).length);
-      const onTimes= labels.map(n => recent.filter(x=>x.prayer===n && x.delayMin>=0 && x.delayMin<=ONTIME_THRESHOLD_MIN).length);
-
-      if (reportChart) { reportChart.destroy(); reportChart = null; }
-      const ctx = document.getElementById("report-chart").getContext("2d");
-      reportChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            { label: 'کل ثبت‌ها', data: counts, backgroundColor: '#3b82f6' },
-            { label: 'اول‌وقت',  data: onTimes, backgroundColor: '#22c55e' }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'bottom' } },
-          scales: { y: { beginAtZero: true, precision: 0 } }
-        }
-      });
-
-      // کارت‌های پراکندگی بر اساس نماز (با رنگ عددها)
       byPrayer.innerHTML = "";
       labels.forEach(n=>{
         const arr = recent.filter(x=>x.prayer===n);
         const cnt = arr.length;
-        const onT = arr.filter(x=>x.delayMin>=0 && x.delayMin<=ONTIME_THRESHOLD_MIN).length;
-        const pos = arr.filter(x=>x.delayMin>0).map(x=>x.delayMin);
-        const avg = pos.length ? Math.round(pos.reduce((s,v)=>s+v,0)/pos.length) : 0;
+        const { onTime, good, late, vlate } = bucketsFor(arr);
 
         const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
+        card.className = "card prayer-report";
+
+        const left = document.createElement("div");
+        left.innerHTML = `
           <div class="flex gap12" style="align-items:center; justify-content:space-between;">
-            <div style="font-weight:700">${n}</div>
-            <div class="inline gap12">
-              <span class="chip">تعداد: ${cnt}</span>
-              <span class="chip">اول‌وقت: <span class="success">${onT}</span></span>
-              <span class="chip">میانگین تاخیر: <span class="danger">${avg}</span></span>
-            </div>
+            <div style="font-weight:800">${n}</div>
+          </div>
+          <div class="chips" style="margin-top:10px;">
+            <span class="chip">تعداد: <span class="num">${cnt}</span></span>
+            <span class="chip">اول‌وقت: <span class="success num">${onTime}</span></span>
+            <span class="chip">مطلوب: <span class="warn num">${good}</span></span>
+            <span class="chip">دیر: <span class="num" style="color:orange">${late}</span></span>
+            <span class="chip">خیلی دیر: <span class="danger num">${vlate}</span></span>
           </div>
         `;
+
+        const right = document.createElement("div");
+        right.className = "center";
+        const canvas = document.createElement("canvas");
+        canvas.width = 160; canvas.height = 160;
+        right.appendChild(canvas);
+
+        card.appendChild(left);
+        card.appendChild(right);
         byPrayer.appendChild(card);
+
+        const ctx = canvas.getContext("2d");
+        const chart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ["اول‌وقت","مطلوب","دیر","خیلی دیر"],
+            datasets: [{
+              data: [onTime, good, late, vlate],
+              backgroundColor: ['#22c55e','#f59e0b','#f97316','#ef4444'],
+            }]
+          },
+          options: {
+            responsive: false,
+            cutout: '58%',
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 14 } },
+              tooltip: { intersect:false }
+            }
+          }
+        });
+        pieCharts.push(chart);
       });
     }
 
