@@ -22,8 +22,25 @@
     h1{ margin:0; font-size:22px; }
     h2{ margin:12px 0 16px; font-size:20px; }
     .toolbar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; margin-bottom:16px; gap:6px; }
-    .btn{ background:#334155; color:var(--text); border:none; padding:6px 10px; border-radius:10px; cursor:pointer; font-size:14px; transition:transform .12s ease, background .2s ease, opacity .2s; }
-    .btn:hover{ transform:translateY(-1px); background:#3a4a63; }
+    
+    .btn {
+  background: linear-gradient(135deg, #334155, #1e293b);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  transition: all .2s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #475569, #334155);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
     .btn:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
     .btn.primary{ background:var(--ok); color:#0b141e; }
     .grid{ display:grid; gap:12px; }
@@ -87,28 +104,73 @@
   .prayer-report{ grid-template-columns: 1fr; }
 }
 
+
+
+.hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  margin-left: auto;
+}
+.hamburger span {
+  width: 24px;
+  height: 3px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+
+
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>تاریخ‌ها</h1>
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <h1></h1>
+        <button id="tools-btn" class="hamburger" aria-label="ابزارها">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>        
+      </div>
       <nav>
         <a href="#" id="nav-days">روزها</a>
         <a href="#" id="nav-report">گزارش ۷ روزه</a>
       </nav>
     </header>
 
+    <!-- Tools Menu -->
+    <div id="tools-menu" class="hidden" style="position:fixed; top:0; right:-300px; width:300px; height:100vh; background:var(--panel); z-index:1000; transition:transform 0.3s ease; box-shadow:-5px 0 15px rgba(0,0,0,0.2); padding:20px; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">ابزارها</h2>
+        <button id="close-tools" class="btn" style="padding:5px 10px;">×</button>
+      </div>
+      <div class="grid" style="gap:10px;">
+        <button class="btn" id="salawat-counter-btn" style="text-align:right; justify-content:flex-end;">
+          <span>شمارنده صلوات</span>
+        </button>
+        <button class="btn" id="ziyarat-btn" style="text-align:right; justify-content:flex-end;">
+          <span>زیارت عاشورا</span>
+        </button>
+        <button class="btn" id="help-btn" style="text-align:right; justify-content:flex-end;">
+          <span>راهنما</span>
+        </button>
+      </div>
+    </div>
+    <div id="tools-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;"></div>
+
     <!-- ====== صفحه روزها ====== -->
     <section id="view-days">
       <div class="toolbar">
         <button class="btn" id="btn-prev-month">ماه قبل</button>
-        <div class="inline">
-          <div class="chip" id="current-month-label">—</div>
-          <button class="btn" id="btn-today">امروز</button>
-        </div>
         <button class="btn" id="btn-next-month">ماه بعد</button>
-      </div>
+      </div>      
       <div class="grid days" id="days-grid"></div>
 
       <div class="hr"></div>
@@ -152,8 +214,152 @@
     </section>
   </div>
 
+  <!-- Tools Pages -->
+  <div id="salawat-counter-page" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:1001; padding:20px;">
+    <div style="max-width:600px; margin:0 auto; text-align:center;">
+      <h2>شمارنده صلوات</h2>
+      <div style="font-size:48px; margin:30px 0;" id="salawat-count">0</div>
+      <button class="btn primary" id="salawat-add" style="font-size:18px; padding:12px 24px;">+ صلوات</button>
+      <div style="margin-top:30px;">
+        <button class="btn" id="back-from-salawat">بازگشت</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ziyarat-page" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:1001; padding:20px; overflow-y:auto;">
+    <div style="max-width:800px; margin:0 auto;">
+      <h2 style="text-align:center;">زیارت عاشورا</h2>
+      <div style="line-height:2; text-align:justify; margin:20px 0;">
+        <p>السَّلامُ عَلَیْکَ یَا أَبا عَبْدِاللّٰهِ، السَّلامُ عَلَیْکَ یَا ابْنَ رَسُولِ اللّٰهِ، السَّلامُ عَلَیْکَ یا خِیَرَةَ اللّٰهِ وَابْنَ خِیرَتِهِ، السَّلامُ عَلَیْکَ یَا ابْنَ أَمِیرِ الْمُؤْمِنِینَ، وَابْنَ سَیِّدِ الْوَصِیِّینَ، اَلسَّلامُ عَلَیْکَ یَابْنَ فاطِمَةَ سَیِّدَةِ نِساءِ الْعالَمینَ، اَلسَّلامُ عَلَیْکَ یا ثارَ اللّهِ وَ ابْنَ ثارِه، وَ الْوِتْرَ الْمَوْتُورَ، اَلسَّلامُ عَلَیْکَ وَ عَلَى الْاَرْواحِ الَّتى حَلَّتْ بِفِنائِکَ، عَلَیْکُمْ مِنّى جَمیعًا سَلامُ اللّهِ اَبَدًا ما بَقیتُ وَ بَقِىَ اللَّیْلُ وَ النَّهارُ، یا اَبا عَبْدِ اللّهِ 
+
+          لَقَدْ عَظُمَتِ الرَّزِیَّةُ، وَ جَلَّتْ وَ عَظُمَتِ الْمُصیبَةُ بِکَ عَلَیْنا وَ عَلى جَمیعِ اَهْلِ الْاِسْلامِ، وَ جَلَّتْ وَ عَظُمَتْ مُصیبَتُکَ فِى السَّماواتِ عَلى جَمیعِ اَهْلِ السَّماواتِ، فَلَعَنَ اللّهُ اُمَّةً اَسَّسَتْ اَساسَ الظُّلْمِ وَ الْجَوْرِ عَلَیْکُمْ اَهْلَ الْبَیْتِ، وَ لَعَنَ اللّهُ اُمَّةً دَفَعَتْکُمْ عَنْ مَقامِکُمْ، وَ اَزالَتْکُمْ عَنْ مَراتِبِکُمُ الَّتى رَتَّبَکُمُ اللّهُ فیها، وَ لَعَنَ اللّهُ اُمَّةً قَتَلَتْکُمْ، وَ لَعَنَ اللّهُ الْمُمَهِّدینَ لَهُمْ بِـالَّتمْکینِ مِنْ قِتالِکُمْ، بَرِئْتُ اِلَى اللّهِ وَ اِلَیْکُمْ مِنْهُمْ وَ مِنْ اَشْیاعِهِمْ وَ اَتْباعِهِمْ وَ اَوْلِیائِهِمْ. یا اَبا عَبْدِ اللّهِ 
+          
+          اِنّى سِلْمٌ لِمَنْ سالَمَکُمْ وَ حَرْبٌ لِمَنْ حارَبَکُمْ اِلى یَوْمِ الْقِیامَةِ، وَ لَعَنَ اللّهُ آلَ زیادٍ وَ آلَ مَرْوانَ، وَ لَعَنَ اللّهُ بَنى اُمَیَّةَ قاطِبَهً، وَ لَعَنَ اللّهُ ابْنَ مَرْجانَهَ، وَ لَعَنَ اللّهُ عُمَرَ بْنَ سَعْدٍ، وَ لَعَنَ اللّهُ شِمْراً، وَ لَعَنَ اللّهُ اُمَّةً اَسْرَجَتْ وَ اَلجَمَتْ وَ تَنَقَّبَتْ لِقِتالِکَ. بِاَبى اَنْتَ وَ اُمّى لَقَدْ عَظُمَ مُصابى بِکَ، فَاَسْاَلُ اللّهَ الَّذى اَکْرَمَ مَقامَکَ وَ اَکْرَمَنى بِکَ، اَنْ یَرْزُقَنى طَلَبَ ثارِکَ مَعَ اِمامٍ مَنْصُورٍ مِنْ اَهْلِ بَیْتِ مُحَمَّدٍ صَلَّى اللّهُ عَلَیْهِ وَ آلِه. اَللّهُمَّ اجْعَلْنى عِنْدَکَ وَجیهًا بِـالْحُسَیْنِ عَلَیْهِ السّلامُ فِى الدُّنْیا وَ الاْخِرَةِ. یا اَبا عَبْدِ اللّهِ 
+          
+          اِنّى اَتَقَرَّبُ اِلَى اللّهِ وَ اِلى رَسُولِه وَ اِلى اَمیرِالْمُؤْمِنینَ، وَ اِلى فاطِمَةَ وَ اِلَى الْحَسَنِ وَ اِلَیْکَ بِمُوالاتِکَ، وَ بِالْبَرآئَةِ مِمَّنْ قاتَلَکَ وَ نَصَبَ لَکَ الْحَرْبَ، وَ بِالْبَرآئَةِ مِمَّنْ اَسَّسَ اَساسَ الظُّلْمِ وَ الْجَوْرِ عَلَیْکُمْ، وَ اَبْرَاُ اِلَى اللّهِ وَ اِلى رَسُولِه مِمَّنْ اَسَّسَ اَساسَ ذلِکَ، وَ بَنى عَلَیْهِ بُنْیانَهُ، وَ جَرى فى ظُلْمِه وَ جَوْرِه عَلَیْکُمْ وَ عَلى اَشْیاعِکُمْ 
+          
+          بَرِئْتُ اِلَى اللّهِ وَ اِلَیْکُمْ مِنْهُمْ، وَ اَتَقَرَّبُ اِلَى اللّهِ ثُمَّ اِلَیْکُمْ بِمُوالاتِکُمْ وَ مُوالاةِ وَلیِّکُمْ، وَ بِالْبَرآئَةِ مِنْ اَعْدائِکُمْ وَ النّاصِبینَ لَکُمُ الْحَرْبَ، وَ بِالْبَرآئَةِ مِنْ اَشْیاعِهِمْ وَ اَتْباعِهِمْ. اِنّى سِلْمٌ لِمَنْ سالَمَکُمْ وَ حَرْبٌ لِمَنْ حارَبَکُمْ، وَ وَلِىٌّ لِمَنْ والاکُمْ وَ عَدُوٌّ لِمَـنْ عـاداکُمْ، فَاَسْـاَلُ اللّهَ الَّذى اَکْرَمَنى بِمَعْرِفَتِکُمْ وَ مَعْرِفَةِ اَوْلِیائِکُمْ، وَ رَزَقَنِـى الْبَرائَـةِ مِنْ اَعْدائِکُـمْ، اَنْ یَجْعَلَنى مَعَکُمْ فِى الدُّنْیا وَ الاْخِرَةِ، وَ اَنْ یُثَبِّتَ لى عِنْدَکُمْ قَدَمَ صِدْقٍ فِى الدُّنْیا وَ الاْخِرَةِ 
+          
+          وَ اَسْاَلُهُ اَنْ یُبَلِّغَنِى الْمَقامَ الْمَحْمُودَ لَکُمْ عِنْدَ اللّهِ، وَ اَنْ یَرْزُقَنى طَلَبَ ثارى (ثارِکُمْ) مَعَ اِمامٍ هُدًى (مَهْدىٍّ) ظاهِرٍ ناطِقٍ بِـالْحَقِّ مِنْکُمْ، وَ اَسْاَلُ اللّهَ بِحَقِّکُمْ وَ بِالشَّأْنِ الَّذى لَکُمْ عِنْدَهُ، اَنْ یُعْطِیَنى بِمُصابى بِکُمْ اَفْضَلَ ما یُعْطى مُصابًا بِمُـصیبَتِه؛ مُصیبَةً ما اَعْظَمَها وَ اَعْظَمَ رَزِیَّتَها فِى الْاِسْلامِ وَ فى جَمیعِ السَّماواتِ وَ الْاَرْضِ. اَللّهُمَّ اجْعَلْنى فى مَقامى هذا مِمَّنْ تَنالُهُ مِنْکَ صَلَواتٌ وَ رَحْمَةٌ وَ مَغْفِرَةٌ. اَللّهُمَّ اجْعَلْ مَحْیاىَ مَحْیا مُحَمَّدٍ وَ آلِ مُحَمَّدٍ، وَ مَماتى مَماتَ مُحَمَّدٍ وَ آلِ مُحَمَّدٍ 
+          
+          اَللّهُمَّ اِنَّ هذا یَوْمٌ تَبَرَّکَتْ بِه بَنُو اُمَیَّهَ، وَ ابْنُ آکِلَةِ الْاَ کْبادِ، اَللَّعینُ ابْنُ اللَّعینِ، عَلى لِسانِکَ وَ لِسانِ نَبِیِّکَ صَلَّى اللّهُ عَلَیْهِ وَ آلِه، فى کُلِّ مَوْطِنٍ وَ مَوْقِفٍ وَقَفَ فیهِ نَبِیُّکَ صَلَّى اللّهُ عَلَیْهِ وَ آلِه. اَللّهُمَّ الْعَنْ اَباسُفْیانَ وَ مُعاوِیَةَ وَ یَزیدَ بْنَ مُعاویَةَ، عَلَیْهِمْ مِنْکَ اللَّعْنَةُ اَبَدَ الاْبِدینَ، وَ هذا یَوْمٌ فَرِحَتْ بِه آلُ‏ زیادٍ وَ آلُ‏ مَرْوانَ بِقَتْلِهِمُ الْحُسَیْنَ صَلَواتُ اللّهِ عَلَیْهِ. اَللّهُمَّ فَضاعِفْ عَلَیْهِمُ اللَّعْنَ مِنْکَ وَ الْعَذابَ الاَلیمَ. اَللّهُمَّ اِنّى اَتَقَرَّبُ اِلَیْکَ فى هذَا الْیَوْمِ، وَ فى مَوْقِفى هذا، وَ اَیّامِ حَیاتى، بِـالْبَرائَةِ مِنْهُمْ وَ اللَّعْنَةِ عَلَیْهِـمْ، وَ بِـالْمُوالاةِ لِنَبِیِّکَ وَ آلِ نَبِیِّکَ عَلَیْهِ وَ عَلَیْهِمُ السَّلامُ 
+          
+          صد مرتبه می گویی : اَللّهُمَّ الْعَنْ اَوَّلَ ظالِمٍ ظَلَمَ حَقَّ مُحَمَّدٍ وَ آلِ مُحَمَّدٍ، وَ آخِرَ تابِعٍ لَهُ عَلى ذلِکَ. اَللّهُمَّ الْعَنِ الْعِصابَةَ الَّتى جاهَدَتِ الْحُسَیْنَ، وَ شایَعَتْ وَ بایَعَتْ وَ تابَعَتْ عَلى قَتْلِه. اَللّهُمَّ الْعَنْهُمْ جَمیعًا 
+          
+          صد مرتبه می گویی : اَلسَّلامُ عَلَیْکَ یا اَبا عَبْدِ اللّهِ، وَ عَلَى الْاَرْواحِ الَّتى حَلَّتْ بِفِنائِکَ، عَلَیْکَ مِنّى سَلامُ اللّهِ اَبَدًا ما بَقیتُ وَ بَقِىَ اللَّیْلُ وَ النَّهارُ، وَ لا جَعَلَهُ اللّهُ آخِرَ الْعَهْدِ مِنّى لِزِیارَتِکُمْ.
+          
+          اَلسَّلامُ عَلَى الْحُسَیْنِ وَ عَلى عَلىِّ بْنِ الْحُسَیْنِ وَ عَلى اَوْلادِ الْحُسَیْنِ وَ عَلى اَصْحابِ الْحُسَیْنِ
+          
+          
+          سپس می گویی : اَللّهُمَّ خُصَّ اَنْتَ اَوَّلَ ظالِمٍ بِاللَّعْنِ مِنّى، وَ ابْدَاْ بِه اَوَّلاً ثُمَّ الْعَنِ الثّانِىَ وَ الثّالِثَ وَ الرّابِعَ. اَللّهُمَّ الْعَنْ یَزیدَ خامِساً، وَ الْعَنْ عُبَیْدَ اللّهِ بْنَ زیادٍ وَ ابْنَ مَرْجانَهَ، وَ عُمَرَ بْنَ سَعْدٍ وَ شِمْراً، وَ آلَ اَبى سُفْیانَ وَ آلَ زیادٍ وَ آلَ مَرْوانَ اِلى یَوْمِ الْقِیامَةِ 
+          
+         در حالت سجده می گویی : اَللّهُمَّ لَکَ الْحَمْدُ حَمْدَ الشّاکِرینَ لَکَ عَلى مُصابِهِمْ، اَلحَمْدُ لِلّهِ عَلى عَظیمِ رَزِیَّتى. اَللّهُمَّ ارْزُقْنى شَفاعَةَ الْحُسَیْنِ یَوْمَ الْوُرُودِ، وَ ثَبِّتْ لى قَدَمَ صِدْقٍ عِنْدَکَ مَعَ الْحُسَیْنِ وَ اَصْحابِ الْحُسَیْنِ، اَلَّذینَ بَذَلُوا مُهَجَهُمْ دُونَ الْحُسَیْنِ عَلَیْهِ السَّلامُ </p>
+        <!-- Full Ziyarat text would go here -->
+      </div>
+      <div style="text-align:center; margin-top:30px;">
+        <button class="btn" id="back-from-ziyarat">بازگشت</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="help-page" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:1001; padding:20px; overflow-y:auto;">
+    <div style="max-width:800px; margin:0 auto;">
+      <h2 style="text-align:center;">راهنمای برنامه</h2>
+      <div style="line-height:1.8; margin:20px 0;">
+        <h3>نحوه استفاده:</h3>
+        <p>1. برای مشاهده اوقات شرعی روز مورد نظر را انتخاب کنید</p>
+        <p>2. برای ثبت نماز روی دکمه "الان خوندم" کلیک کنید</p>
+        <p>3. در صفحه گزارش می‌توانید عملکرد 7 روز اخیر را مشاهده کنید</p>
+      </div>
+      <div style="text-align:center; margin-top:30px;">
+        <button class="btn" id="back-from-help">بازگشت</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // =============================
+    // Tools Menu Functionality
+    // =============================
+    const toolsBtn = document.getElementById("tools-btn");
+    const toolsMenu = document.getElementById("tools-menu");
+    const toolsOverlay = document.getElementById("tools-overlay");
+    const closeTools = document.getElementById("close-tools");
+
+    toolsBtn.addEventListener("click", () => {
+      toolsMenu.classList.remove("hidden");
+      toolsOverlay.classList.remove("hidden");
+      setTimeout(() => {
+        toolsMenu.style.transform = "translateX(-300px)";
+      }, 10);
+    });
+
+    closeTools.addEventListener("click", closeToolsMenu);
+    toolsOverlay.addEventListener("click", closeToolsMenu);
+
+    function closeToolsMenu() {
+      toolsMenu.style.transform = "translateX(0)";
+      setTimeout(() => {
+        toolsMenu.classList.add("hidden");
+        toolsOverlay.classList.add("hidden");
+      }, 300);
+    }
+
+    // Salawat Counter
+    const salawatBtn = document.getElementById("salawat-counter-btn");
+    const salawatPage = document.getElementById("salawat-counter-page");
+    const salawatCount = document.getElementById("salawat-count");
+    const salawatAdd = document.getElementById("salawat-add");
+    const backFromSalawat = document.getElementById("back-from-salawat");
+
+    let count = 0;
+    salawatBtn.addEventListener("click", () => {
+      closeToolsMenu();
+      salawatPage.classList.remove("hidden");
+      count = 0;
+      salawatCount.textContent = count;
+    });
+
+    salawatAdd.addEventListener("click", () => {
+      count++;
+      salawatCount.textContent = count;
+    });
+
+    backFromSalawat.addEventListener("click", () => {
+      salawatPage.classList.add("hidden");
+    });
+
+    // Ziyarat Ashura
+    const ziyaratBtn = document.getElementById("ziyarat-btn");
+    const ziyaratPage = document.getElementById("ziyarat-page");
+    const backFromZiyarat = document.getElementById("back-from-ziyarat");
+
+    ziyaratBtn.addEventListener("click", () => {
+      closeToolsMenu();
+      ziyaratPage.classList.remove("hidden");
+    });
+
+    backFromZiyarat.addEventListener("click", () => {
+      ziyaratPage.classList.add("hidden");
+    });
+
+    // Help Page
+    const helpBtn = document.getElementById("help-btn");
+    const helpPage = document.getElementById("help-page");
+    const backFromHelp = document.getElementById("back-from-help");
+
+    helpBtn.addEventListener("click", () => {
+      closeToolsMenu();
+      helpPage.classList.remove("hidden");
+    });
+
+    backFromHelp.addEventListener("click", () => {
+      helpPage.classList.add("hidden");
+    });
+
+    // =============================
+    // تنظیمات اصلی
+
     // تنظیمات اصلی
     // =============================
     const TEHRAN_OFFSET_MIN = 210; // +03:30
@@ -289,14 +495,11 @@
     // =============================
     let currentJ = (()=>{ const p = persianParts(new Date()); return { jy:p.jy, jm:p.jm }; })();
     const daysGrid = document.getElementById("days-grid");
-    const currentMonthLabel = document.getElementById("current-month-label");
     const btnPrev = document.getElementById("btn-prev-month");
     const btnNext = document.getElementById("btn-next-month");
-    const btnToday= document.getElementById("btn-today");
 
     btnPrev.addEventListener("click", ()=>{ currentJ.jm--; if(currentJ.jm<1){ currentJ.jm=12; currentJ.jy--; } renderMonth(); });
     btnNext.addEventListener("click", ()=>{ currentJ.jm++; if(currentJ.jm>12){ currentJ.jm=1; currentJ.jy++; } renderMonth(); });
-    btnToday.addEventListener("click", ()=>{ const p=persianParts(new Date()); currentJ={jy:p.jy, jm:p.jm}; renderMonth(); });
 
     function buildJalaliMonth(jy,jm){
       const [gy,gm,gd] = jalaliToGregorian(jy,jm,1);
@@ -316,7 +519,6 @@
     function renderMonth(){
       const m = buildJalaliMonth(currentJ.jy, currentJ.jm);
       const todayJ = persianParts(new Date());
-      currentMonthLabel.textContent = m.label;
       daysGrid.innerHTML = "";
       m.days.forEach(d=>{
         const a = document.createElement("a");
