@@ -63,25 +63,30 @@
 
     /* موبایل: روزها در دو ردیف با اسکرول افقی */
     @media (max-width: 480px) {
-      .container { padding: 12px; }
-      h1 { font-size: 18px; }
-      h2 { font-size: 16px; margin: 8px 0 12px; }
-      .card { padding: 10px; border-radius:12px; }
-      .stat .value { font-size: 18px; }
-      .inline { flex-wrap: wrap; }
-      .btn { font-size: 13px; padding: 5px 8px; }
-      .days{
-        display:grid;
-        grid-auto-flow: column;
-        grid-template-rows: repeat(2, minmax(84px, auto));
-        grid-auto-columns: minmax(220px, 1fr);
-        gap:10px;
-        overflow-x:auto; padding-bottom:6px;
-        scroll-snap-type: x proximity;
-      }
-      .day-card{ scroll-snap-align:start; }
-      .prayer-report{ grid-template-columns: 1fr; }
-    }
+  .container { padding: 12px; }
+  h1 { font-size: 18px; }
+  h2 { font-size: 16px; margin: 8px 0 12px; }
+  .card { padding: 10px; border-radius: 12px; }
+  .stat .value { font-size: 18px; }
+  .inline { flex-wrap: wrap; }
+  .btn { font-size: 13px; padding: 5px 8px; }
+
+  /* ✅ دو ستون، اسکرول عمودی */
+  .days{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    /* هر چی مربوط به اسکرول افقی بود حذف/اوِرراید شد */
+    overflow-x: visible;
+  }
+
+  .day-card{ /* اسنپ غیرفعال شود */
+    scroll-snap-align: none;
+  }
+
+  .prayer-report{ grid-template-columns: 1fr; }
+}
+
   </style>
 </head>
 <body>
