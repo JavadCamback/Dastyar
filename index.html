@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
@@ -158,6 +159,9 @@
         <button class="btn" id="ziyarat-btn" style="text-align:right; justify-content:flex-end;">
           <span>زیارت عاشورا</span>
         </button>
+        <button class="btn" id="thirtyday-btn" style="text-align:right; justify-content:flex-end;">
+          <span>گزارش ۳۰ روزه</span>
+        </button>
         <button class="btn" id="help-btn" style="text-align:right; justify-content:flex-end;">
           <span>راهنما</span>
         </button>
@@ -262,6 +266,34 @@
     </div>
   </div>
 
+  <div id="thirtyday-page" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:1001; padding:20px; overflow-y:auto;">
+    <div style="max-width:800px; margin:0 auto;">
+      <h2 style="text-align:center;">گزارش ۳۰ روز اخیر</h2>
+
+      <div class="stat-grid">
+        <div class="card stat">
+          <div class="label">تعداد ثبت‌ها</div>
+          <div class="value" id="thirtyday-total">0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">اول‌وقت (≤ ۱۵ دقیقه)</div>
+          <div class="value success" id="thirtyday-ontime">0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">میانگین تاخیر (دقیقه)</div>
+          <div class="value danger" id="thirtyday-avg">0</div>
+        </div>
+      </div>
+
+      <div class="grid" id="thirtyday-by-prayer"></div>
+      <div class="muted" style="margin-top:10px;">تعاریف: اول‌وقت ≤ ۱۵ دقیقه، مطلوب ≤ ۶۰ دقیقه، دیر &lt; ۴ ساعت، خیلی دیر ≥ ۴ ساعت</div>
+
+      <div style="text-align:center; margin-top:30px;">
+        <button class="btn" id="back-from-thirtyday">بازگشت به صفحه اصلی</button>
+      </div>
+    </div>
+  </div>
+
   <div id="help-page" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:1001; padding:20px; overflow-y:auto;">
     <div style="max-width:800px; margin:0 auto;">
       <h2 style="text-align:center;">راهنمای برنامه</h2>
@@ -342,6 +374,103 @@
     backFromZiyarat.addEventListener("click", () => {
       ziyaratPage.classList.add("hidden");
     });
+
+    // 30-Day Report
+    const thirtydayBtn = document.getElementById("thirtyday-btn");
+    const thirtydayPage = document.getElementById("thirtyday-page");
+    const backFromThirtyday = document.getElementById("back-from-thirtyday");
+    let thirtydayCharts = [];
+
+    thirtydayBtn.addEventListener("click", () => {
+      closeToolsMenu();
+      thirtydayPage.classList.remove("hidden");
+      refreshThirtydayReport();
+    });
+
+    backFromThirtyday.addEventListener("click", () => {
+      thirtydayPage.classList.add("hidden");
+      thirtydayCharts.forEach(ch => ch.destroy());
+      thirtydayCharts = [];
+    });
+
+    function refreshThirtydayReport() {
+      const logs = loadLogs();
+      const now = Date.now();
+      const thirtyDaysMs = 29*86400000; // امروز و 29 روز قبل
+      const start = now - thirtyDaysMs;
+      const recent = logs.filter(x => {
+        const t = Date.parse(x.prayedUTC);
+        return t >= start && t <= now;
+      });
+
+      const total = recent.length;
+      const ontime = recent.filter(x => x.delayMin >= 0 && x.delayMin <= ONTIME_THRESHOLD_MIN).length;
+      const positiveDelays = recent.filter(x=>x.delayMin>0).map(x=>x.delayMin);
+      const avgDelay = positiveDelays.length ? Math.round(positiveDelays.reduce((s,v)=>s+v,0)/positiveDelays.length) : 0;
+
+      document.getElementById("thirtyday-total").textContent = total;
+      document.getElementById("thirtyday-ontime").textContent = ontime;
+      document.getElementById("thirtyday-avg").textContent = avgDelay;
+
+      // کارت‌ها + نمودارهای دایره‌ای برای هر نماز
+      const labels = ["صبح","ظهر","مغرب"];
+      const container = document.getElementById("thirtyday-by-prayer");
+      container.innerHTML = "";
+      
+      labels.forEach(n => {
+        const arr = recent.filter(x=>x.prayer===n);
+        const cnt = arr.length;
+        const { onTime, good, late, vlate } = bucketsFor(arr);
+
+        const card = document.createElement("div");
+        card.className = "card prayer-report";
+
+        const left = document.createElement("div");
+        left.innerHTML = `
+          <div class="flex gap12" style="align-items:center; justify-content:space-between;">
+            <div style="font-weight:800">${n}</div>
+          </div>
+          <div class="chips" style="margin-top:10px;">
+            <span class="chip">تعداد: <span class="num">${cnt}</span></span>
+            <span class="chip">اول‌وقت: <span class="success num">${onTime}</span></span>
+            <span class="chip">مطلوب: <span class="warn num">${good}</span></span>
+            <span class="chip">دیر: <span class="num" style="color:orange">${late}</span></span>
+            <span class="chip">خیلی دیر: <span class="danger num">${vlate}</span></span>
+          </div>
+        `;
+
+        const right = document.createElement("div");
+        right.className = "center";
+        const canvas = document.createElement("canvas");
+        canvas.width = 160; canvas.height = 160;
+        right.appendChild(canvas);
+
+        card.appendChild(left);
+        card.appendChild(right);
+        container.appendChild(card);
+
+        const ctx = canvas.getContext("2d");
+        const chart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ["اول‌وقت","مطلوب","دیر","خیلی دیر"],
+            datasets: [{
+              data: [onTime, good, late, vlate],
+              backgroundColor: ['#22c55e','#f59e0b','#f97316','#ef4444'],
+            }]
+          },
+          options: {
+            responsive: false,
+            cutout: '58%',
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 14 } },
+              tooltip: { intersect:false }
+            }
+          }
+        });
+        thirtydayCharts.push(chart);
+      });
+    }
 
     // Help Page
     const helpBtn = document.getElementById("help-btn");
