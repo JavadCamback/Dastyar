@@ -12,6 +12,12 @@
       --brand:#93c5fd; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --chip:#334155;
       --ring:#60a5fa;
     }
+    
+    .light-theme {
+      --bg:#cae1e2; --panel:#cadfe0; --muted:#64748b; --text:#1e293b;
+      --brand:#3b82f6; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444; --chip:#e2e8f0;
+      --ring:#3bf679;
+    }
     *{ box-sizing:border-box; }
     body{ margin:0; font-family:system-ui, Tahoma; background:var(--bg); color:var(--text); }
     a{ color:var(--brand); text-decoration:none; }
@@ -25,30 +31,59 @@
     .toolbar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; margin-bottom:16px; gap:6px; }
     
     .btn {
-  background: linear-gradient(135deg, #334155, #1e293b);
-  color: var(--text);
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 8px 14px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: .3px;
-  transition: all .2s ease;
-}
-.btn:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #475569, #334155);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
+      background: linear-gradient(135deg, #475b7a, #1e293b);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 8px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      transition: all .2s ease;
+      backdrop-filter: blur(4px);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #475569, #334155);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .light-theme .btn {
+      background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
+      border: 1px solid rgba(0,0,0,0.08);
+      color: #1e293b;
+    }
+    .light-theme .btn:hover {
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    }
 
     .btn:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
     .btn.primary{ background:var(--ok); color:#0b141e; }
     .grid{ display:grid; gap:12px; }
     /* پیش‌فرض دسکتاپ: کارت‌های روز مثل قبل */
     .days{ grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); }
-    .card{ background:var(--panel); border-radius:14px; padding:14px; box-shadow:0 6px 18px rgba(0,0,0,.25); border:1px solid rgba(148,163,184,.08); }
-    .day-card{ display:block; color:var(--text); position:relative; }
+    .card{ 
+      background:var(--panel); 
+      border-radius:14px; 
+      padding:14px; 
+      box-shadow:0 6px 18px rgba(0,0,0,.25); 
+      border:1px solid rgba(148,163,184,.08);
+      backdrop-filter: blur(8px);
+    }
+    .light-theme .card {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .day-card{ 
+      display:block; 
+      color:var(--text); 
+      position:relative;
+      background: rgba(255,255,255,0.05);
+      transition: all 0.3s ease;
+    }
+    .light-theme .day-card {
+      background: rgba(255,255,255,0.7);
+    }
     .day-card:hover{ transform:translateY(-1px); }
     .day-card.today{ outline:2px solid var(--ring); box-shadow:0 0 0 4px rgba(96,165,250,.15), 0 6px 18px rgba(0,0,0,.28); }
     .day-title{ font-weight:800; margin-bottom:6px; }
@@ -125,7 +160,16 @@
   transition: all 0.3s ease;
 }
 
+#sound-btn {
+    font-size: 20px;      /* بزرگ‌تر شدن شکلک */
+    background: none;     /* حذف پس‌زمینه */
+    border: none;         /* حذف کادر */
+    cursor: pointer;      /* تغییر ماوس به دست */
+  }
 
+  #sound-btn:focus {
+    outline: none;        /* حذف حاشیه آبی بعد از کلیک */
+  }
 
   </style>
 </head>
@@ -145,7 +189,11 @@
         <a href="#" id="nav-report">گزارش ۷ روزه</a>
       </nav>
     </header>
-
+    <audio id="bg-music" loop>
+      <source src="https://v.delgarm.com/mp3/804/2023/10/20/65324f5562985.mp3" type="audio/mpeg">
+      مرورگر شما از صدا پشتیبانی نمی‌کند.
+    </audio>
+    
     <!-- Tools Menu -->
     <div id="tools-menu" class="hidden" style="position:fixed; top:0; right:-300px; width:300px; height:100vh; background:var(--panel); z-index:1000; transition:transform 0.3s ease; box-shadow:-5px 0 15px rgba(0,0,0,0.2); padding:20px; overflow-y:auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -165,6 +213,10 @@
         <button class="btn" id="help-btn" style="text-align:right; justify-content:flex-end;">
           <span>راهنما</span>
         </button>
+        <button class="btn" id="theme-btn" style="text-align:right; justify-content:flex-end;">
+          <span>تغییر تم</span>
+        </button>
+        <button onclick="playMusic()">پخش صدا</button>
       </div>
     </div>
     <div id="tools-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;"></div>
@@ -173,6 +225,7 @@
     <section id="view-days">
       <div class="toolbar">
         <button class="btn" id="btn-prev-month">ماه قبل</button>
+        <button id="sound-btn" onclick="toggleSound()">🔊</button>
         <button class="btn" id="btn-next-month">ماه بعد</button>
       </div>      
       <div class="grid days" id="days-grid"></div>
@@ -183,7 +236,7 @@
         <h2 id="day-title">—</h2>
         <div class="grid rows" id="prayers-rows"></div>
         <div class="muted" id="sunrise-line" style="margin-top:10px;"></div>
-        <div class="muted" style="margin-top:10px;">روش محاسبه: Tehran (17.7, 4.5, 14) – افق مشهد – Asia/Tehran</div>
+        <div class="muted" style="margin-top:10px;">افق مشهد</div>
       </div>
     </section>
 
@@ -476,6 +529,7 @@
     const helpBtn = document.getElementById("help-btn");
     const helpPage = document.getElementById("help-page");
     const backFromHelp = document.getElementById("back-from-help");
+    const themeBtn = document.getElementById("theme-btn");
 
     helpBtn.addEventListener("click", () => {
       closeToolsMenu();
@@ -485,6 +539,17 @@
     backFromHelp.addEventListener("click", () => {
       helpPage.classList.add("hidden");
     });
+
+    // Theme Toggle
+    themeBtn.addEventListener("click", () => {
+      document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    });
+
+    // Check saved theme preference
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light-theme');
+    }
 
     // =============================
     // تنظیمات اصلی
@@ -876,7 +941,23 @@
         pieCharts.push(chart);
       });
     }
+    let isPlaying = false; // وضعیت صدا
 
+  function toggleSound() {
+    let audio = document.getElementById("bg-music");
+    let btn = document.getElementById("sound-btn");
+
+    if (!isPlaying) {
+      audio.volume = 0.1; // صدای کم
+      audio.play();
+      btn.innerHTML = "🔇"; // تغییر به بی‌صدا
+      isPlaying = true;
+    } else {
+      audio.pause();
+      btn.innerHTML = "🔊"; // تغییر به بلندگو
+      isPlaying = false;
+    }
+  }
     // =============================
     // شروع
     // =============================
