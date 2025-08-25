@@ -225,7 +225,7 @@
     <section id="view-days">
       <div class="toolbar">
         <button class="btn" id="btn-prev-month">ماه قبل</button>
-        <button id="sound-btn" onclick="toggleSound()">🔊</button>
+        <button id="sound-btn" onclick="toggleSound()">🔇</button>
         <button class="btn" id="btn-next-month">ماه بعد</button>
       </div>      
       <div class="grid days" id="days-grid"></div>
@@ -950,11 +950,11 @@
     if (!isPlaying) {
       audio.volume = 0.1; // صدای کم
       audio.play();
-      btn.innerHTML = "🔇"; // تغییر به بی‌صدا
+      btn.innerHTML = "🔊"; // تغییر به بی‌صدا
       isPlaying = true;
     } else {
       audio.pause();
-      btn.innerHTML = "🔊"; // تغییر به بلندگو
+      btn.innerHTML = "🔇"; // تغییر به بلندگو
       isPlaying = false;
     }
   }
